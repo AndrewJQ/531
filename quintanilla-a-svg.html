@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Svg Recreation 1</title>
+</head>
+
+<body>
+    <div id="canvas">
+
+    </div>
+
+    <script>
+        // Svg canvas size
+        const VB_HEIGHT = "100%";
+        const VB_WIDTH = "100%";
+        const VB = [0, 0, 100, 100];
+
+        // Circle
+        const circle = (cx, cy, r, stroke = "black", fill = "black", rotation = [0, 0, 0]) => {
+            return `
+            <g transform="rotate(${rotation[0]}, ${rotation[1]}, ${rotation[2]})">
+                <circle cx="${cx}" cy="${cy}" r="${r}" stroke=${stroke} fill=${fill} />
+            </g>
+            `;
+        }
+
+        // Ellipse
+        const ellipse = (cx, cy, rx, ry, stroke = "black", fill = "black", rotation = [0, 0, 0]) => {
+            return `
+            <g transform="rotate(${rotation[0]}, ${rotation[1]}, ${rotation[2]})">
+                <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke=${stroke} fill=${fill} />
+            </g>
+            `;
+        }
+
+        // Rectangle
+        const rect = (x, y, width, height, stroke = "black", fill = "black", rotation = [0, 0, 0]) => {
+            return `
+            <g transform="rotate(${rotation[0]}, ${rotation[1]}, ${rotation[2]})">
+                <rect x="${x}" y="${y}" width="${width}" height="${height}" stroke=${stroke} fill=${fill} />
+            </g>
+            `;
+        }
+
+        // Polygon
+        const polygon = (points, stroke = "black", fill = "black", rotation = [0, 0, 0]) => {
+            let pointsList = ``;
+
+            points.forEach(e => {
+                pointsList += `${e} `;
+            });
+
+            return `
+            <g transform="rotate(${rotation[0]}, ${rotation[1]}, ${rotation[2]})">
+                <polygon points="${pointsList}" stroke=${stroke} fill=${fill} />
+            </g>
+            `;
+        }
+
+        // Line
+        const line = (x1, y1, x2, y2, stroke = "black", rotation = [0, 0, 0]) => {
+            return `
+            <g transform="rotate(${rotation[0]}, ${rotation[1]}, ${rotation[2]})">
+                <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke=${stroke} />
+            </g>
+            `;
+        }
+
+        // Make the svg
+        const makeSvg = (width, height, vb) => {
+            return `
+            <svg width=${width} height=${height} viewbox="${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}">
+                ${rect(0, 0, 100, 100, "none", "#EEEDEB",)}
+                ${rect(1, 35, 25, 25, "none", "#BE2A2A", [5, 1, 60])}
+                ${rect(20, 10, 25, 25, "none", "#6B2933", [-26, 20, 35])}
+                ${rect(55, 45, 25, 25, "none", "#6B2933", [4, 55, 70])}
+                ${rect(51, 55, 25, 25, "none", "#6B2933", [-25, 51, 80])}
+                ${rect(30, 3, 25, 25, "none", "rgba(190,42,42,0.98)", [-3, 55, 3])}
+                ${rect(71, 74, 25, 25, "none", "#BE2A2A", [-48, 71, 100])}
+                ${rect(12, 20, 25, 25, "none", "#E84139", [45, 24, 32])}
+                ${rect(45, 25, 25, 25, "none", "#E84139", [-10, 57, 37])}
+                ${rect(74, 75, 25, 25, "none", "#E42524", [14, 100, 75])}
+            </svg>
+            `;
+        }
+
+        // Draw the svg
+        document.querySelector("#canvas").innerHTML = makeSvg(VB_HEIGHT, VB_WIDTH, VB);
+    </script>
+</body>
+
+</html>
