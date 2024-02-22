@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Svg Recreation</title>
+    <script src="./src/FastNoiseLite.js" type="module"></script>
+    <script src="./src/library.js"></script>
+</head>
+
+<body>
+    <div id="canvas"></div>
+
+    <script type="module">
+        import { FastNoiseLite } from "./src/FastNoiseLite.js";
+
+        // Svg canvas size
+        const VB_HEIGHT = "100%";
+        const VB_WIDTH = "100%";
+        const VB = [-10, -10, 500, 500];
+
+        // Noise
+        let noiseData = [];
+        const noiseStart = (_row = 10, _col = 10) => {
+            noiseData = [];
+            let noise = new FastNoiseLite();
+            noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+
+            for (let x = 0; x < _row; x++) {
+                noiseData[x] = [];
+
+                for (let y = 0; y < _col; y++) {
+                    noiseData[x][y] = noise.GetNoise(x * Math.random(), y * Math.random());
+                }
+            }
+        }
+
+        // Random
+        let randomData = [];
+        const randomStart = (_row = 10, _col = 10) => {
+            randomData = [];
+
+            for (let x = 0; x < _row; x++) {
+                randomData[x] = [];
+
+                for (let y = 0; y < _col; y++) {
+                    randomData[x][y] = Math.random();
+                }
+            }
+        }
+
+        // Tile 1
+        const tile1 = (_size = 20.0, _color = "black") => {
+            let data = "";
+            let color = _color;
+            let unit = _size / 4.0;
+
+            data += line(0, unit, unit * 4, unit, color);
+            data += line(unit, 0, unit, unit * 4, color);
+            data += line(unit * 2, 0, unit * 2, unit, color);
+            data += line(unit * 3, 0, unit * 3, unit, color);
+            data += line(0, unit * 2, unit, unit * 2, color);
+            data += line(0, unit * 3, unit, unit * 3, color);
+            data += path([unit * 2, unit * 2, unit * 4, unit * 2, unit * 2, unit * 2, unit * 2, unit * 4], color);
+            data += path([unit * 3, unit * 3, unit * 4, unit * 3, unit * 3, unit * 3, unit * 3, unit * 4], color);
+
+            return data;
+        }
+
+        // Tile 2
+        const tile2 = (_size = 20.0, _color = "black") => {
+            let data = "";
+            let color = _color;
+            let unit = _size / 4.0;
+
+            data += path([0, unit, unit, unit, unit, 0, unit, unit], color);
+            data += line(unit * 2, 0, unit * 2, unit, color);
+            data += path([unit * 3, 0, unit * 3, unit, unit * 4, unit, unit * 3, unit], color);
+            data += line(0, unit * 2, unit, unit * 2, color);
+            data += path([0, unit * 3, unit, unit * 3, unit, unit * 4, unit, unit * 3], color);
+            data += path([unit * 2, unit * 2, unit * 4, unit * 2, unit * 2, unit * 2, unit * 2, unit * 4], color);
+            data += path([unit * 3, unit * 3, unit * 4, unit * 3, unit * 3, unit * 3, unit * 3, unit * 4], color);
+
+            return data;
+        }
+
+        const tile3 = (_size = 20.0, _color = "black") => {
+            let data = "";
+            let color = _color;
+            let unit = _size / 4.0;
+            let radius = _size / 20.0;
+
+            data += circle(unit / 2, unit / 2, radius,color);
+            data += circle(unit / 2, unit / 2 + unit * 3, radius,color);
+            data += circle(unit / 2 + unit * 3, unit / 2, radius,color);
+
+            return data;
+        }
+
+        // Pattern svg
+        const pattern = (_tile, size = 20.0, _row = 10, _col = 10) => {
+            let data = "";
+            let tile = _tile[0]
+            let tile2 = _tile[0]
+
+            // Noise set up
+            noiseStart(_row, _col);
+            randomStart(_row,_col);
+            console.log(noiseData)
+            console.log(randomData)
+
+            // Parameters
+            const ROWS = _row;
+            const COL = _col;
+            const CENTER = size / 2;
+
+            // Shape creation
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COL; c++) {
+                    if (randomData[r][c] <= 0.25) {
+                        data += translate(
+                            rotate(tile, CENTER, CENTER, 0),
+                            (c * size),
+                            (r * size));
+
+                        if (noiseData[r][c] < 0.2) {
+                            data += translate(
+                                rotate(_tile[2], CENTER, CENTER, 0),
+                                (c * size),
+                                (r * size));
+                        }
+                    }
+                    else if (randomData[r][c] > 0.25 && randomData[r][c] <= 0.5) {
+                        data += translate(
+                            rotate(tile, CENTER, CENTER, 90),
+                            (c * size),
+                            (r * size));
+
+                        if (noiseData[r][c] < 0.2) {
+                            data += translate(
+                                rotate(_tile[2], CENTER, CENTER, 0),
+                                (c * size),
+                                (r * size));
+                        }
+                    }
+                    else if (randomData[r][c] > 0.5 && randomData[r][c] <= 0.75) {
+                        data += translate(
+                            rotate(tile, CENTER, CENTER, 180),
+                            (c * size),
+                            (r * size));
+
+                        if (noiseData[r][c] < 0.2) {
+                            data += translate(
+                                rotate(_tile[2], CENTER, CENTER, 0),
+                                (c * size),
+                                (r * size));
+                        }
+                    }
+                    else if (randomData[r][c] > 0.75 && randomData[r][c] <= 1.0) {
+                        data += translate(
+                            rotate(tile, CENTER, CENTER, 270),
+                            (c * size),
+                            (r * size));
+
+                        if (noiseData[r][c] < 0.2) {
+                            data += translate(
+                                rotate(_tile[2], CENTER, CENTER, 0),
+                                (c * size),
+                                (r * size));
+                        }
+                    }
+                }
+            }
+
+            return data;
+        }
+
+        // Format Svg
+        const makeSvg = (svg, width, height, vb, background = true) => {
+            let bg = "";
+            if (background) {
+                bg = rect(vb[0], vb[1], vb[2], vb[3], "none", "#EEEDEB");
+            }
+
+            return `
+            <svg width=${width} height=${height} viewbox="${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}">
+                ${bg}
+                ${svg}
+            </svg>
+            `;
+        }
+
+        // Draw Svg
+        let tileSize = 20;
+        let pSize = 24;
+        document.querySelector("#canvas").innerHTML = makeSvg(pattern([tile1(tileSize), tile2(tileSize), tile3(tileSize,"red")], tileSize, pSize, pSize), VB_WIDTH, VB_HEIGHT, VB);
+
+        // Interruptions
+        //document.querySelector("#canvas").innerHTML = makeSvg(interruptions(line(5, 0, 5, 20), 50, 50, 1), VB_WIDTH, VB_HEIGHT, VB);
+        //document.querySelector("#canvas").innerHTML = makeSvg(interruptions(rect(5, 0, 2, 20), 50, 50, 1), VB_WIDTH, VB_HEIGHT, VB);
+        //document.querySelector("#canvas").innerHTML = makeSvg(interruptions(circle(5, 0, 2), 50, 50, 1), VB_WIDTH, VB_HEIGHT, VB);
+
+    </script>
+</body>
+
+</html>
