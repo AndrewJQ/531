@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Demo Application</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #render {
+            width: 90vmin;
+            height: 90vmin;
+            margin: auto;
+            outline: 1px solid black;
+
+        }
+
+        div:has(#render) {
+            width: 100%;
+            height: 100vh;
+            min-height: 100vh;
+            max-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            font-size: 1.25em;
+            width: fit-content;
+            height: fit-content;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+    </style>
+    </code_to_rewrite>
+</head>
+
+<body>
+    <script src="https://unpkg.com/@jscad/modeling" id="MODELING"></script>
+    <script src="https://unpkg.com/@jscad/regl-renderer"></script>
+    <!-- Borrowed from https://github.com/microsoft/maker.js/blob/ec18acb959fa1b5f3fb0c790f45ffe2f9092c1b0/docs/external/jscad/stl-serializer.js -->
+    <!-- <script src="stl-serializer.js"></script> -->
+
+    <div>
+        <div id="render"></div>
+    </div>
+
+    <script type="module" language="javascript">
+        import { Turtle } from './turtle.js';
+
+        import { render } from './render.js';
+
+        import { squareSierShape } from './squareSierpinsky.js';
+        import { quadGosShape } from './quadraticGosper.js';
+        import { hilbertShape } from './hilbert.js';
+
+        import { pathThroughSpace, lSystem } from './lSystem.js';
+
+        const { booleans, colors, primitives, transforms } = jscadModeling // modeling comes from the included MODELING library
+        const { translate, rotate, scale } = transforms;
+
+        const { intersect, subtract, union } = booleans
+        const { colorize, colorNameToRgb } = colors
+        const { cube, cuboid, sphere, cylinder } = primitives
+
+        const rightAngle = 90 * Math.PI / 180;
+        const fortyFiveAngle = 45 * Math.PI / 180
+
+        const test = (parameters, iterations = 0) => {
+            const size = parameters.size;
+            const hypParam = parameters.hypotenuse;
+            const cubeHypotenuse = Math.sqrt(Math.pow(size, 2) * 2);
+
+            if (iterations === 0) {
+                // return [
+                //     cubeHollow(size)
+                // ]
+                return cylinder({ radius: 3, height: size, segments: 64 });
+            }
+
+            /* make some "pyramids" in a pyramadical shape */
+
+            // By how much we want to move the smaller cubes
+            const deltaAmount = (size) => {
+                // Half the original size, perturbed a bit, made a bit smaller for overlap
+                const halfSize = size / 2;
+                const rand = Math.random() * .2 + .9;
+                const aBitSmaller = 0.8;
+
+                //return aBitSmaller * 1 * halfSize;
+
+                return 90;
+            };
+            // How big the smaller cubes should be
+            // Half the original size, made a bit bigger for overlap
+            const smallerSize = 1.1 * size / 2;
+
+            return [
+                //translate([5, 0, 0], test({ size: 100 }, iterations - 1))
+                test({ size: size, hypotenuse: cubeHypotenuse }, 0),
+                rotate([deltaAmount(cubeHypotenuse), 0, 0], test({ size: size, hypotenuse: cubeHypotenuse }, iterations - 1)),
+                rotate([-deltaAmount(cubeHypotenuse), 0, 0], test({ size: size, hypotenuse: cubeHypotenuse }, iterations - 1)),
+                //rotate([0, deltaAmount(), 0], test({ size: cubeHypotenuse }, iterations - 1)),
+                //rotate([0, -deltaAmount(), 0], test({ size: cubeHypotenuse }, iterations - 1))
+            ];
+        }
+
+        const cubeHollow = (size) => {
+            const objectSize = 4;
+            const object = cube({ size: objectSize });
+
+            let pathBottom = [
+                translate([size / 2, size / 2, size / 2], object),
+                translate([-size / 2, size / 2, size / 2], object),
+                translate([-size / 2, -size / 2, size / 2], object),
+                translate([size / 2, -size / 2, size / 2], object),
+                translate([size / 2, size / 2, size / 2], object),
+            ]
+
+            let pathTop = [
+                translate([size / 2, size / 2, -size / 2], object),
+                translate([-size / 2, size / 2, -size / 2], object),
+                translate([-size / 2, -size / 2, -size / 2], object),
+                translate([size / 2, -size / 2, -size / 2], object),
+                translate([size / 2, size / 2, -size / 2], object),
+            ]
+
+            let sides = [
+                translate([size / 2, size / 2, -size / 2], object),
+                translate([size / 2, size / 2, size / 2], object),
+                translate([-size / 2, size / 2, size / 2], object),
+                translate([-size / 2, size / 2, -size / 2], object),
+                translate([-size / 2, -size / 2, -size / 2], object),
+                translate([-size / 2, -size / 2, size / 2], object),
+                translate([size / 2, -size / 2, size / 2], object),
+                translate([size / 2, -size / 2, -size / 2], object),
+            ]
+
+            return union(jscadModeling.hulls.hullChain(pathBottom),
+                jscadModeling.hulls.hullChain(pathTop),
+                jscadModeling.hulls.hullChain(sides));
+
+        }
+
+        const fixedHilbert = () => {
+            let scaleSize = 1.06
+            return rotate([rightAngle, rightAngle, 0], scale([scaleSize, scaleSize, scaleSize], pathThroughSpace(lSystem(hilbertShape))));
+        }
+
+        const fixedQuad = () => {
+            let scaleSize = 1.33
+            return scale([scaleSize, scaleSize, scaleSize], pathThroughSpace(lSystem(quadGosShape)));
+        }
+
+        const wholeObject = () => {
+            return union(cubeHollow(100),
+                translate([-50, -116, 50], fixedQuad()),
+                translate([-50, -116, -50], fixedQuad()),
+                translate([50, -116, 50], rotate([0, rightAngle, 0], fixedQuad())),
+                translate([-102, 50, 50], fixedHilbert()),
+                translate([-102, -50, 50], fixedHilbert()))
+
+        }
+
+        const fixedWholeObject = () => {
+            return rotate([0, rightAngle, 0], wholeObject())
+        }
+
+        // render(document.getElementById("render"), 
+        //        demo());
+        render(document.getElementById("render"),
+            fixedWholeObject());
+
+    </script>
+</body>
+
+</html>
